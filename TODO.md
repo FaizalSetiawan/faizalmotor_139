@@ -1,0 +1,1 @@
+    # TODO: Perbaiki Route /kategori\n\n✅ Breakdown approved plan dan edit routes/web.php dengan logic filter kategori\n- [ ] Test akses http://127.0.0.1:8000/kategori\n- [ ] Jalankan php artisan storage:link jika gambar tidak muncul\n- [ ] Complete task
