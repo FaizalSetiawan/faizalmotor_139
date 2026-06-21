@@ -18,5 +18,5 @@
     { "src": "/placeholder.png", "dest": "/public/placeholder.png" },
     { "src": "/(.*)", "dest": "/api/index.php" }
   ],
-  "buildCommand": "composer install --no-dev && npm install && npm run build"
+  "buildCommand": "npm install && npm run build"
 }
