@@ -1,0 +1,121 @@
+@import "tailwindcss" source("../");
+
+@theme {
+  --color-neon-blue: #00D4FF;
+  --color-neon-yellow: #FFD700;
+  --color-neon-green: #00FF7F;
+  --color-dark-bg: #0a0a0a;
+  --color-dark-card: #141414;
+  --color-dark-border: #1e1e1e;
+  --font-orbitron: 'Orbitron', sans-serif;
+  --font-montserrat: 'Montserrat', sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  font-family: 'Montserrat', system-ui, sans-serif;
+  background-color: #0a0a0a;
+  color: #ffffff;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+/* Neon glow utilities */
+.glow-blue {
+  box-shadow: 0 0 10px #00D4FF, 0 0 20px #00D4FF40, 0 0 40px #00D4FF20;
+}
+.glow-yellow {
+  box-shadow: 0 0 10px #FFD700, 0 0 20px #FFD70040, 0 0 40px #FFD70020;
+}
+.glow-green {
+  box-shadow: 0 0 10px #00FF7F, 0 0 20px #00FF7F40, 0 0 40px #00FF7F20;
+}
+
+.text-glow-blue {
+  text-shadow: 0 0 10px #00D4FF, 0 0 20px #00D4FF80;
+}
+.text-glow-yellow {
+  text-shadow: 0 0 10px #FFD700, 0 0 20px #FFD70080;
+}
+
+/* Particle canvas */
+#particle-canvas {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Headlamp glow animation */
+@keyframes headlampPulse {
+  0%, 100% { filter: drop-shadow(0 0 8px #00D4FF) drop-shadow(0 0 20px #00D4FF60); }
+  50% { filter: drop-shadow(0 0 20px #00D4FF) drop-shadow(0 0 50px #00D4FF80) drop-shadow(0 0 80px #00D4FF40); }
+}
+
+@keyframes neonFlicker {
+  0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% { opacity: 1; }
+  20%, 24%, 55% { opacity: 0.8; }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-15px); }
+}
+
+@keyframes scanline {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100vh); }
+}
+
+@keyframes borderGlow {
+  0%, 100% { border-color: #00D4FF40; box-shadow: 0 0 5px #00D4FF20; }
+  50% { border-color: #00D4FF; box-shadow: 0 0 15px #00D4FF60, inset 0 0 15px #00D4FF10; }
+}
+
+@keyframes countUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.headlamp-glow {
+  animation: headlampPulse 2s ease-in-out infinite;
+}
+
+.float-animation {
+  animation: float 3s ease-in-out infinite;
+}
+
+.neon-border-animate {
+  animation: borderGlow 2s ease-in-out infinite;
+}
+
+/* Product card hover */
+.product-card:hover .product-img {
+  filter: drop-shadow(0 0 15px #00D4FF80);
+  transform: scale(1.05);
+}
+.product-img {
+  transition: all 0.3s ease;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: #0a0a0a; }
+::-webkit-scrollbar-thumb { background: #00D4FF40; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #00D4FF; }
+
+/* Carousel */
+.carousel-container {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.carousel-container::-webkit-scrollbar { display: none; }

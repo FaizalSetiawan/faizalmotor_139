@@ -1,0 +1,27 @@
+# Exclude dependency directories (installed during Vercel build)
+/vendor
+/node_modules
+
+# Exclude environment files
+.env
+.env.production
+.env.local
+
+# Exclude Laravel runtime storage caches and sessions
+/storage/framework/cache/*
+/storage/framework/sessions/*
+/storage/framework/views/*
+/storage/logs/*
+
+# Exclude Git files
+.git
+.gitignore
+.gitattributes
+
+# Exclude local tests and IDE settings
+/tests
+/phpunit.xml
+.idea
+.vscode
+/node_modules
+/vendor

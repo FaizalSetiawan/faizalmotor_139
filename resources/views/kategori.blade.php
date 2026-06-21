@@ -1,680 +1,875 @@
 @php use Illuminate\Support\Str; @endphp
 <!DOCTYPE html>
-<html lang="id">
+<html lang="{{ app()->getLocale() }}">
 <head>
   <meta charset="UTF-8">
-  <title>Kategori Produk - Faizal Motor 139</title>
-  <meta name="description" content="Lihat semua produk custom lampu motor dari Faizal Motor 139. Filter berdasarkan brand dan model motor.">
+  <title>{{ $tab === 'sirine' ? __('site.sirine.title') : __('site.category.title') }}</title>
+  <meta name="description" content="{{ $tab === 'sirine' ? __('site.sirine.meta') : __('site.category.meta') }}">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-
+  <link rel="icon" href="/img/faizalmotor_logo.png" type="image/png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/category.css">
   <style>
-    /* ========== RESET & BASE ========== */
-    * { margin:0; padding:0; box-sizing:border-box; font-family:'Poppins',sans-serif; }
+    /* ===================================================
+       CATALOG UNIFIED — Extra styles for tab switcher
+       and mobile-only brand header
+    =================================================== */
 
-    :root {
-      --ice-50:#f0f9ff; --ice-100:#e0f2fe; --ice-200:#bae6fd; --ice-300:#7dd3fc;
-      --ice-400:#38bdf8; --ice-500:#0ea5e9; --ice-600:#0284c7; --ice-700:#0369a1;
-      --navy-800:#0c4a6e; --navy-900:#0f172a; --navy-950:#020617;
-      --frost-white:rgba(255,255,255,0.85); --frost-border:rgba(255,255,255,0.3);
-      --shadow-ice:rgba(14,165,233,0.15); --shadow-dark:rgba(15,23,42,0.08);
-    }
-
-    body {
-      color:#1e293b; padding-top:70px; overflow-x:hidden; min-height:100vh;
-      background: var(--ice-50);
-      background-image:
-        radial-gradient(ellipse 80% 50% at 20% 60%, rgba(56,189,248,0.07) 0%, transparent 70%),
-        radial-gradient(ellipse 60% 40% at 80% 30%, rgba(14,165,233,0.05) 0%, transparent 70%),
-        radial-gradient(ellipse 50% 50% at 50% 100%, rgba(3,105,161,0.04) 0%, transparent 60%);
-      background-attachment: fixed;
+    /* Hide old navbar completely on mobile — fix bug */
+    @media (max-width: 768px) {
+      .navbar { display: none !important; }
     }
 
-    /* ========== LOADING SCREEN ========== */
-    .loading-screen {
-      position:fixed; top:0; left:0; width:100%; height:100%; z-index:9999;
-      background: linear-gradient(135deg, var(--navy-950) 0%, var(--navy-900) 50%, var(--navy-800) 100%);
-      display:flex; flex-direction:column; align-items:center; justify-content:center;
-      transition: opacity 0.5s ease, visibility 0.5s ease;
+    /* Mobile-brand-header: hidden on desktop, shown on mobile */
+    .mobile-brand-header {
+      display: none;
     }
-    .loading-screen.hide { opacity:0; visibility:hidden; pointer-events:none; }
-
-    .loader-bulb {
-      width:80px; height:80px; position:relative; margin-bottom:28px;
-    }
-    /* Bulb body */
-    .loader-bulb .bulb {
-      width:50px; height:50px; border-radius:50% 50% 45% 45%;
-      background: radial-gradient(circle at 40% 35%, #fff 0%, var(--ice-300) 30%, var(--ice-500) 70%, var(--ice-700) 100%);
-      position:absolute; top:0; left:50%; transform:translateX(-50%);
-      box-shadow: 0 0 20px var(--ice-400), 0 0 60px rgba(56,189,248,0.4), 0 0 100px rgba(56,189,248,0.2);
-      animation: glowPulse 1.5s ease-in-out infinite;
-    }
-    /* Bulb base */
-    .loader-bulb .base {
-      width:24px; height:14px; position:absolute; bottom:8px; left:50%; transform:translateX(-50%);
-      background: repeating-linear-gradient(0deg, #94a3b8 0px, #94a3b8 3px, #64748b 3px, #64748b 5px);
-      border-radius:0 0 6px 6px;
-    }
-    /* Light rays */
-    .loader-bulb .ray {
-      position:absolute; background:var(--ice-300); border-radius:2px; opacity:0;
-      animation: rayShoot 1.5s ease-in-out infinite;
-    }
-    .loader-bulb .ray:nth-child(3){ width:2px; height:18px; top:-20px; left:50%; transform:translateX(-50%); animation-delay:0s; }
-    .loader-bulb .ray:nth-child(4){ width:2px; height:14px; top:-14px; left:12px; transform:rotate(-35deg); animation-delay:0.15s; }
-    .loader-bulb .ray:nth-child(5){ width:2px; height:14px; top:-14px; right:12px; transform:rotate(35deg); animation-delay:0.3s; }
-    .loader-bulb .ray:nth-child(6){ width:14px; height:2px; top:20px; left:-16px; animation-delay:0.45s; }
-    .loader-bulb .ray:nth-child(7){ width:14px; height:2px; top:20px; right:-16px; animation-delay:0.6s; }
-
-    @keyframes glowPulse {
-      0%,100% { box-shadow: 0 0 20px var(--ice-400), 0 0 40px rgba(56,189,248,0.3); }
-      50% { box-shadow: 0 0 30px var(--ice-300), 0 0 80px rgba(56,189,248,0.5), 0 0 120px rgba(56,189,248,0.2); }
-    }
-    @keyframes rayShoot {
-      0%,100% { opacity:0; transform-origin:center; }
-      30%,70% { opacity:0.8; }
+    @media (max-width: 768px) {
+      .mobile-brand-header {
+        display: flex;
+        position: sticky;
+        top: 0;
+        z-index: 500;
+        background: #fff;
+        border-bottom: 1px solid #D9D9D9;
+        align-items: center;
+        padding: 10px 16px;
+        height: 52px;
+        box-shadow: 0 1px 8px rgba(0,0,0,.06);
+      }
+      .mobile-brand-header a {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        text-decoration: none;
+      }
+      .mobile-brand-header img {
+        height: 32px;
+        width: auto;
+        object-fit: contain;
+      }
+      .mobile-brand-header strong {
+        font-family: 'Barlow Condensed', sans-serif;
+        font-size: 17px;
+        font-weight: 700;
+        color: #0B0B0B;
+        text-transform: uppercase;
+      }
     }
 
-    .loading-text {
-      color:var(--ice-200); font-size:14px; font-weight:500; letter-spacing:2px; text-transform:uppercase;
+    /* ===== TAB SWITCHER ===== */
+    .catalog-tabs {
+      display: flex;
+      background: #fff;
+      border-bottom: 2px solid #D9D9D9;
+      position: sticky;
+      top: 52px; /* below mobile header */
+      z-index: 400;
+      overflow-x: auto;
+      scrollbar-width: none;
     }
-    .loading-text span {
-      display:inline-block; animation: typeBlink 1.5s steps(3) infinite;
+    @media (min-width: 768px) {
+      .catalog-tabs {
+        top: 0; /* desktop: no mobile header above */
+        border-bottom: 2px solid #D9D9D9;
+      }
     }
-    @keyframes typeBlink { 0%{opacity:0} 50%{opacity:1} 100%{opacity:0} }
+    .catalog-tabs::-webkit-scrollbar { display: none; }
 
-    .loading-bar {
-      width:180px; height:3px; background:rgba(255,255,255,0.1); border-radius:3px;
-      margin-top:16px; overflow:hidden;
+    .catalog-tab {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 14px 20px;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #737373;
+      text-decoration: none;
+      border-bottom: 3px solid transparent;
+      margin-bottom: -2px;
+      white-space: nowrap;
+      transition: color 0.2s, border-color 0.2s;
+      -webkit-tap-highlight-color: transparent;
     }
-    .loading-bar .fill {
-      width:0; height:100%; background:linear-gradient(90deg,var(--ice-400),var(--ice-300),var(--ice-400));
-      border-radius:3px; animation: barFill 1.8s ease-in-out infinite;
+    .catalog-tab.is-active {
+      color: #0B0B0B;
+      border-bottom-color: #E63946;
     }
-    @keyframes barFill { 0%{width:0;margin-left:0} 50%{width:60%} 100%{width:0;margin-left:100%} }
-
-    /* ========== NAVBAR ========== */
-    .navbar {
-      height:70px; position:fixed; top:0; width:100%;
-      background:linear-gradient(90deg,var(--navy-900),var(--navy-950));
-      backdrop-filter:blur(10px); display:flex; align-items:center;
-      justify-content:space-between; padding:0 40px; z-index:999; transition:top .3s ease;
+    .catalog-tab svg {
+      flex-shrink: 0;
     }
-    .navbar .left { display:flex; align-items:center; gap:10px; }
-    .navbar .left img { height:40px; }
-    .navbar .left h1 { font-size:18px; color:#fff; font-weight:700; }
-    .navbar ul { display:flex; gap:25px; list-style:none; }
-    .navbar a { color:rgba(255,255,255,.8); text-decoration:none; font-weight:500; font-size:15px; transition:color .3s; position:relative; }
-    .navbar a:hover, .navbar a.active { color:var(--ice-300); }
-    .navbar a.active::after {
-      content:''; position:absolute; bottom:-5px; left:0; width:100%; height:2px;
-      background:var(--ice-400); border-radius:2px;
+    .catalog-tab__count {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 20px;
+      height: 20px;
+      padding: 0 5px;
+      border-radius: 99px;
+      background: #f1f5f9;
+      color: #737373;
+      font-size: 11px;
+      font-weight: 700;
+      font-family: 'Inter', system-ui, sans-serif;
     }
-
-    /* ========== HERO BANNER ========== */
-    .page-hero {
-      background: linear-gradient(135deg, var(--navy-900) 0%, var(--navy-800) 40%, var(--ice-600) 100%);
-      padding:60px 40px 50px; position:relative; overflow:hidden;
-    }
-    .page-hero::before {
-      content:''; position:absolute; top:-50%; right:-20%; width:600px; height:600px;
-      background:radial-gradient(circle,rgba(56,189,248,.2) 0%,transparent 70%);
-      border-radius:50%; animation:float 8s ease-in-out infinite;
-    }
-    .page-hero::after {
-      content:''; position:absolute; bottom:-30%; left:-10%; width:400px; height:400px;
-      background:radial-gradient(circle,rgba(125,211,252,.15) 0%,transparent 70%);
-      border-radius:50%; animation:float 6s ease-in-out infinite reverse;
-    }
-
-    /* Floating particles in hero */
-    .particle {
-      position:absolute; border-radius:50%; pointer-events:none;
-      background:rgba(56,189,248,.3); animation:particleFloat linear infinite;
+    .catalog-tab.is-active .catalog-tab__count {
+      background: rgba(230,57,70,0.1);
+      color: #E63946;
     }
 
-    @keyframes float { 0%,100%{transform:translateY(0) scale(1)} 50%{transform:translateY(-20px) scale(1.05)} }
-    @keyframes particleFloat {
-      0%{transform:translateY(0) translateX(0); opacity:0}
-      10%{opacity:1}
-      90%{opacity:1}
-      100%{transform:translateY(-200px) translateX(30px); opacity:0}
+    /* ===== PAGE HEADER (compact) ===== */
+    .page-header {
+      padding: 18px 16px 14px;
+      background: #fff;
+      border-bottom: 1px solid #D9D9D9;
+    }
+    .page-header h1 {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 22px;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: #0B0B0B;
+    }
+    @media (min-width: 768px) {
+      .page-header { padding: 24px 24px 18px; }
+      .page-header h1 { font-size: 28px; }
     }
 
-    .page-hero h1 { color:#fff; font-size:36px; font-weight:800; position:relative; z-index:2; margin-bottom:8px; }
-    .page-hero h1 span {
-      background:linear-gradient(90deg,var(--ice-300),var(--ice-200));
-      -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
-    }
-    .page-hero p { color:var(--ice-200); font-size:16px; font-weight:300; position:relative; z-index:2; }
-
-    .breadcrumb { display:flex; gap:8px; align-items:center; margin-bottom:16px; position:relative; z-index:2; }
-    .breadcrumb a { color:var(--ice-300); text-decoration:none; font-size:14px; transition:color .3s; }
-    .breadcrumb a:hover { color:#fff; }
-    .breadcrumb span { color:var(--ice-400); font-size:14px; }
-    .breadcrumb .current { color:rgba(255,255,255,.6); font-size:14px; }
-
-    /* ========== FILTER SECTION ========== */
-    .filter-section { max-width:1280px; margin:-30px auto 0; padding:0 24px; position:relative; z-index:10; }
-    .filter-card {
-      background:var(--frost-white); backdrop-filter:blur(20px);
-      border:1px solid var(--frost-border); border-radius:20px; padding:28px 32px;
-      box-shadow:0 8px 32px var(--shadow-ice), 0 2px 8px var(--shadow-dark);
-    }
-    .filter-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; }
-    .filter-header h3 { font-size:16px; font-weight:600; color:var(--navy-900); display:flex; align-items:center; gap:8px; }
-    .filter-header h3 .icon {
-      background:linear-gradient(135deg,var(--ice-400),var(--ice-600)); color:#fff;
-      width:32px; height:32px; border-radius:10px; display:flex; align-items:center;
-      justify-content:center; font-size:16px;
-    }
-    .filter-reset {
-      color:var(--ice-500); text-decoration:none; font-size:13px; font-weight:500;
-      padding:6px 14px; border-radius:20px; border:1px solid var(--ice-200); transition:all .3s;
-    }
-    .filter-reset:hover { background:var(--ice-500); color:#fff; border-color:var(--ice-500); }
-
-    .filter-group { margin-bottom:16px; }
-    .filter-group:last-child { margin-bottom:0; }
-    .filter-label { font-size:13px; font-weight:600; color:#64748b; text-transform:uppercase; letter-spacing:.5px; margin-bottom:10px; display:block; }
-    .filter-chips { display:flex; gap:8px; flex-wrap:wrap; }
-
-    .chip {
-      padding:8px 18px; border-radius:50px; border:1.5px solid var(--ice-200);
-      background:#fff; color:#475569; font-size:13px; font-weight:500;
-      text-decoration:none; transition:all .3s ease; cursor:pointer;
-    }
-    .chip:hover { border-color:var(--ice-400); color:var(--ice-600); background:var(--ice-50); transform:translateY(-2px); box-shadow:0 4px 12px var(--shadow-ice); }
-    .chip.active { background:linear-gradient(135deg,var(--ice-400),var(--ice-600)); color:#fff; border-color:transparent; box-shadow:0 4px 16px rgba(14,165,233,.35); }
-
-    .filter-row { display:flex; gap:24px; align-items:flex-start; flex-wrap:wrap; }
-    .filter-col { flex:1; min-width:200px; }
-
-    .sort-select {
-      padding:10px 16px; border-radius:12px; border:1.5px solid var(--ice-200);
-      background:#fff; color:#475569; font-size:13px; font-weight:500;
-      font-family:'Poppins',sans-serif; cursor:pointer; outline:none; transition:all .3s;
-      min-width:180px; appearance:none;
-      background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%2364748b' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
-      background-repeat:no-repeat; background-position:right 14px center; padding-right:36px;
-    }
-    .sort-select:focus { border-color:var(--ice-400); box-shadow:0 0 0 3px rgba(56,189,248,.15); }
-
-    /* ========== RESULTS BAR ========== */
-    .results-bar { max-width:1280px; margin:28px auto 0; padding:0 24px; display:flex; align-items:center; justify-content:space-between; }
-    .results-count { font-size:14px; color:#64748b; font-weight:500; }
-    .results-count strong { color:var(--navy-900); font-weight:700; }
-
-    /* ========== PRODUCT GRID ========== */
-    .products-section { max-width:1280px; margin:20px auto 0; padding:0 24px; }
-    .product-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:24px; }
-
+    /* ===== PRODUCT CARD — unified style ===== */
     .product-card {
-      background:#fff; border-radius:18px; overflow:hidden;
-      transition:all .4s cubic-bezier(.175,.885,.32,1.275);
-      border:1px solid rgba(0,0,0,.04); position:relative;
-      opacity:0; transform:translateY(30px);
+      background: #fff;
+      border-radius: 12px;
+      border: 1px solid #D9D9D9;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      transition: box-shadow 0.2s, transform 0.2s;
     }
-    .product-card.visible { opacity:1; transform:translateY(0); }
-    .product-card:hover { transform:translateY(-8px); box-shadow:0 20px 40px rgba(14,165,233,.15),0 8px 16px rgba(0,0,0,.06); }
+    .product-card:hover {
+      box-shadow: 0 6px 18px rgba(0,0,0,0.1);
+      transform: translateY(-2px);
+    }
+    .card-link, .main-link {
+      text-decoration: none;
+      color: inherit;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }
+    .image-wrapper {
+      aspect-ratio: 1;
+      overflow: hidden;
+      background: #f0f7fb;
+    }
+    .image-wrapper img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.3s ease;
+    }
+    .product-card:hover .image-wrapper img {
+      transform: scale(1.04);
+    }
+    .card-body {
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }
+    .tag, .motor-tag {
+      display: inline-flex;
+      padding: 3px 8px;
+      border-radius: 99px;
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 10px;
+      font-weight: 600;
+      align-self: flex-start;
+      margin-bottom: 6px;
+    }
+    .tag { background: #eff6ff; color: #0369a1; }
+    .motor-tag { background: rgba(230,57,70,0.08); color: #E63946; }
 
-    .product-card .image-wrapper {
-      position:relative; overflow:hidden; height:220px;
-      background:linear-gradient(135deg,var(--ice-50),var(--ice-100));
-    }
-    .product-card .image-wrapper img { width:100%; height:100%; object-fit:cover; transition:transform .5s ease; }
-    .product-card:hover .image-wrapper img { transform:scale(1.08); }
-    .product-card .image-wrapper .badge-overlay {
-      position:absolute; top:14px; left:14px;
-      background:linear-gradient(135deg,var(--ice-400),var(--ice-600)); color:#fff;
-      padding:5px 12px; border-radius:20px; font-size:11px; font-weight:600; letter-spacing:.3px;
-      box-shadow:0 4px 12px rgba(14,165,233,.3);
-    }
-
-    .product-card .card-body { padding:20px; }
-    .product-card .motor-tag {
-      display:inline-flex; align-items:center; gap:4px; background:var(--ice-50);
-      color:var(--ice-700); padding:4px 10px; border-radius:6px; font-size:11px;
-      font-weight:600; margin-bottom:10px; border:1px solid var(--ice-100);
-    }
     .product-card h3 {
-      font-size:16px; font-weight:700; color:var(--navy-900); margin-bottom:6px; line-height:1.4;
-      display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      color: #0B0B0B;
+      line-height: 1.4;
+      margin-bottom: 6px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      min-height: 40px;
     }
-    .product-card .description {
-      font-size:13px; color:#94a3b8; margin-bottom:16px;
-      display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; line-height:1.6;
-    }
-    .product-card .card-footer {
-      display:flex; align-items:center; justify-content:space-between;
-      padding-top:14px; border-top:1px solid #f1f5f9;
-    }
-    .product-card .price {
-      font-size:18px; font-weight:800;
-      background:linear-gradient(135deg,var(--ice-500),var(--ice-700));
-      -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+    .price {
+      margin-top: auto;
+      padding-top: 8px;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      color: #E63946;
     }
 
+    /* Sirine card additions */
+    .description {
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 12px;
+      color: #737373;
+      line-height: 1.5;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      margin-bottom: 8px;
+      min-height: 36px;
+    }
+    .card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-top: auto;
+    }
     .btn-detail {
-      display:inline-flex; align-items:center; gap:4px; padding:8px 16px;
-      background:linear-gradient(135deg,var(--ice-400),var(--ice-500)); color:#fff;
-      border-radius:10px; text-decoration:none; font-size:12px; font-weight:600;
-      transition:all .3s; box-shadow:0 2px 8px rgba(14,165,233,.2);
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 11px;
+      font-weight: 600;
+      color: #5CBDEB;
+      background: rgba(92,189,235,0.1);
+      padding: 4px 10px;
+      border-radius: 99px;
+      white-space: nowrap;
     }
-    .btn-detail:hover { background:linear-gradient(135deg,var(--ice-500),var(--ice-600)); box-shadow:0 4px 16px rgba(14,165,233,.35); transform:translateY(-1px); }
-
     .btn-wa {
-      display:flex; align-items:center; justify-content:center; gap:8px;
-      margin-top:14px; padding:10px 16px;
-      background:linear-gradient(135deg,#22c55e,#16a34a); color:#fff;
-      border-radius:12px; text-decoration:none; font-size:13px; font-weight:600;
-      transition:all .3s; box-shadow:0 2px 8px rgba(34,197,94,.25);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      width: 100%;
+      padding: 10px 12px;
+      background: #25D366;
+      color: #fff;
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      text-decoration: none;
+      border-radius: 0 0 12px 12px;
+      min-height: 44px;
+      transition: opacity 0.2s;
+      -webkit-tap-highlight-color: transparent;
     }
-    .btn-wa:hover { background:linear-gradient(135deg,#16a34a,#15803d); box-shadow:0 6px 20px rgba(34,197,94,.35); transform:translateY(-2px); }
+    .btn-wa:active { opacity: 0.85; }
 
-    /* ========== CTA - Tanya Admin ========== */
-    .cta-section {
-      max-width:1280px; margin:48px auto 60px; padding:0 24px;
+    /* Store links */
+    .store-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      padding: 10px 12px 12px;
+      border-top: 1px solid #f1f5f9;
     }
-    .cta-card {
-      background: linear-gradient(135deg, var(--navy-900) 0%, var(--navy-800) 50%, var(--ice-700) 100%);
-      border-radius:24px; padding:48px 40px; position:relative; overflow:hidden;
-      display:flex; align-items:center; gap:40px; flex-wrap:wrap;
+    .btn-store-card {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 10px;
+      border-radius: 99px;
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 11px;
+      font-weight: 600;
+      text-decoration: none;
+      background: #f8fafc;
+      color: #0B0B0B;
+      border: 1px solid #e2e8f0;
+      transition: background 0.2s;
     }
-    .cta-card::before {
-      content:''; position:absolute; top:-40%; right:-10%; width:400px; height:400px;
-      background:radial-gradient(circle,rgba(56,189,248,.15) 0%,transparent 70%);
-      border-radius:50%; animation:float 10s ease-in-out infinite;
-    }
-    .cta-card::after {
-      content:''; position:absolute; bottom:-50%; left:10%; width:300px; height:300px;
-      background:radial-gradient(circle,rgba(125,211,252,.1) 0%,transparent 70%);
-      border-radius:50%; animation:float 7s ease-in-out infinite reverse;
-    }
-    .cta-icon {
-      font-size:56px; width:100px; height:100px; display:flex; align-items:center; justify-content:center;
-      background:rgba(255,255,255,.08); border-radius:24px; border:1px solid rgba(255,255,255,.1);
-      flex-shrink:0; position:relative; z-index:2;
-    }
-    .cta-content { flex:1; min-width:240px; position:relative; z-index:2; }
-    .cta-content h2 { color:#fff; font-size:24px; font-weight:700; margin-bottom:8px; }
-    .cta-content p { color:var(--ice-200); font-size:15px; line-height:1.7; margin-bottom:20px; }
-    .cta-buttons { display:flex; gap:12px; flex-wrap:wrap; }
-    .cta-btn-wa {
-      display:inline-flex; align-items:center; gap:8px; padding:14px 28px;
-      background:linear-gradient(135deg,#22c55e,#16a34a); color:#fff; border-radius:14px;
-      text-decoration:none; font-size:14px; font-weight:600; transition:all .3s;
-      box-shadow:0 4px 16px rgba(34,197,94,.3);
-    }
-    .cta-btn-wa:hover { box-shadow:0 8px 28px rgba(34,197,94,.45); transform:translateY(-2px); }
-    .cta-btn-wa2 {
-      display:inline-flex; align-items:center; gap:8px; padding:14px 28px;
-      background:rgba(255,255,255,.08); color:#fff; border-radius:14px;
-      text-decoration:none; font-size:14px; font-weight:600; transition:all .3s;
-      border:1px solid rgba(255,255,255,.15);
-    }
-    .cta-btn-wa2:hover { background:rgba(255,255,255,.15); transform:translateY(-2px); }
+    .btn-store-card:active { background: #e2e8f0; }
+    .btn-store-card .shopee-icon img { width: 14px; height: 14px; object-fit: contain; }
 
-    /* ========== EMPTY STATE ========== */
-    .empty-state { text-align:center; padding:80px 20px; grid-column:1/-1; }
-    .empty-state .empty-icon { font-size:64px; margin-bottom:16px; opacity:.6; }
-    .empty-state h3 { font-size:20px; color:var(--navy-900); margin-bottom:8px; }
-    .empty-state p { color:#94a3b8; font-size:14px; margin-bottom:20px; }
-    .empty-state .empty-actions { display:flex; gap:12px; justify-content:center; flex-wrap:wrap; }
-    .empty-state .btn-all {
-      display:inline-block; padding:10px 24px;
-      background:linear-gradient(135deg,var(--ice-400),var(--ice-600)); color:#fff;
-      border-radius:12px; text-decoration:none; font-weight:600; font-size:14px; transition:all .3s;
+    /* Product grid */
+    .product-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
     }
-    .empty-state .btn-all:hover { box-shadow:0 6px 20px rgba(14,165,233,.35); transform:translateY(-2px); }
-    .empty-state .btn-ask {
-      display:inline-flex; align-items:center; gap:6px; padding:10px 24px;
-      background:linear-gradient(135deg,#22c55e,#16a34a); color:#fff;
-      border-radius:12px; text-decoration:none; font-weight:600; font-size:14px; transition:all .3s;
+    @media (min-width: 560px) {
+      .product-grid { grid-template-columns: repeat(3, 1fr); gap: 14px; }
     }
-    .empty-state .btn-ask:hover { box-shadow:0 6px 20px rgba(34,197,94,.35); transform:translateY(-2px); }
+    @media (min-width: 768px) {
+      .product-grid { grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    }
+    @media (min-width: 1024px) {
+      .product-grid { grid-template-columns: repeat(4, 1fr); gap: 18px; }
+    }
 
-    /* ========== FOOTER ========== */
+    /* Products section */
+    .products-section {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 20px 16px 40px;
+    }
+    @media (min-width: 768px) {
+      .products-section { padding: 24px 24px 60px; }
+    }
+
+    /* Filter section */
+    .filter-section {
+      background: #fff;
+      border-bottom: 1px solid #D9D9D9;
+      padding: 14px 16px;
+    }
+    @media (min-width: 768px) {
+      .filter-section { padding: 18px 24px; }
+    }
+    .filter-inline { max-width: 1280px; margin: 0 auto; }
+    .filter-group { margin-bottom: 12px; }
+    .filter-group:last-child { margin-bottom: 0; }
+    .filter-group label {
+      display: block;
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 11px;
+      font-weight: 600;
+      color: #737373;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+    }
+    .chip-row {
+      display: flex;
+      flex-wrap: nowrap;
+      gap: 6px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+    .chip-row::-webkit-scrollbar { display: none; }
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 6px 14px;
+      border-radius: 99px;
+      text-decoration: none;
+      background: #f1f5f9;
+      color: #737373;
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 12px;
+      font-weight: 500;
+      border: 1px solid transparent;
+      cursor: pointer;
+      user-select: none;
+      transition: 0.2s;
+      white-space: nowrap;
+      flex-shrink: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .chip:hover { background: #e2e8f0; color: #0B0B0B; }
+    .chip.active { background: #0B0B0B; color: #fff; }
+    .selectbox {
+      width: 100%;
+      max-width: 240px;
+      border: 1px solid #D9D9D9;
+      border-radius: 8px;
+      background: #f8fafc;
+      padding: 9px 12px;
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      color: #0B0B0B;
+      outline: none;
+      cursor: pointer;
+    }
+    .selectbox:focus { border-color: #5CBDEB; }
+    .btn-reset {
+      display: inline-block;
+      text-decoration: none;
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 12px;
+      font-weight: 600;
+      color: #E63946;
+      background: rgba(230,57,70,0.07);
+      padding: 7px 14px;
+      border-radius: 99px;
+      margin-top: 6px;
+      transition: 0.2s;
+    }
+    .btn-reset:hover { background: #E63946; color: #fff; }
+
+    /* Empty state */
+    .empty-state {
+      background: #fff;
+      border-radius: 12px;
+      border: 1px solid #D9D9D9;
+      padding: 40px 20px;
+      text-align: center;
+    }
+    .empty-state h3 {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 22px;
+      text-transform: uppercase;
+      color: #0B0B0B;
+      margin-bottom: 8px;
+    }
+    .empty-state p {
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 14px;
+      color: #737373;
+      margin-bottom: 20px;
+    }
+    .empty-actions {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .empty-actions a {
+      text-decoration: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      color: #fff;
+      font-family: 'Inter', system-ui, sans-serif;
+      font-weight: 600;
+      font-size: 13px;
+      background: #0B0B0B;
+      transition: 0.2s;
+    }
+    .empty-actions a:hover { opacity: 0.85; }
+
+    /* Pagination */
+    .pagination-wrap {
+      display: flex;
+      justify-content: center;
+      margin-top: 28px;
+    }
+    .pagination-wrap nav > div:first-child { display: none; }
+    .pagination-wrap nav > div:last-child {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .pagination-wrap a,
+    .pagination-wrap span {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 36px;
+      height: 36px;
+      padding: 0 8px;
+      border-radius: 8px;
+      border: 1px solid #D9D9D9;
+      background: #fff;
+      color: #0B0B0B;
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: 0.2s;
+    }
+    .pagination-wrap a:hover { background: #0B0B0B; color: #fff; border-color: #0B0B0B; }
+    .pagination-wrap span[aria-current="page"] { background: #0B0B0B; color: #fff; border-color: #0B0B0B; }
+
+    /* Footer */
     .footer {
-      background:linear-gradient(90deg,var(--navy-900),var(--navy-950));
-      color:#fff; text-align:center; padding:30px 20px; font-size:14px;
+      background: #0B0B0B;
+      color: #fff;
+      text-align: center;
+      padding: 18px 16px 90px; /* extra bottom for mobile navbar */
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 13px;
+      margin-top: 32px;
     }
-    .footer span { color:var(--ice-400); font-weight:600; }
-
-    /* ========== FLOATING WA BUTTON ========== */
-    .float-wa {
-      position:fixed; bottom:28px; right:28px; z-index:900;
-      width:60px; height:60px; border-radius:50%;
-      background:linear-gradient(135deg,#22c55e,#16a34a); color:#fff;
-      display:flex; align-items:center; justify-content:center;
-      font-size:28px; text-decoration:none; transition:all .3s;
-      box-shadow:0 6px 24px rgba(34,197,94,.4);
-      animation: bounceIn 0.6s ease forwards;
-    }
-    .float-wa:hover { transform:scale(1.1) translateY(-4px); box-shadow:0 10px 32px rgba(34,197,94,.5); }
-    .float-wa .tooltip {
-      position:absolute; right:72px; top:50%; transform:translateY(-50%);
-      background:var(--navy-900); color:#fff; padding:8px 14px; border-radius:10px;
-      font-size:12px; font-weight:500; white-space:nowrap;
-      opacity:0; transition:opacity .3s; pointer-events:none;
-    }
-    .float-wa .tooltip::after {
-      content:''; position:absolute; right:-6px; top:50%; transform:translateY(-50%);
-      border:6px solid transparent; border-left-color:var(--navy-900);
-    }
-    .float-wa:hover .tooltip { opacity:1; }
-
-    @keyframes bounceIn {
-      0%{ transform:scale(0); opacity:0; }
-      60%{ transform:scale(1.15); opacity:1; }
-      100%{ transform:scale(1); }
+    @media (min-width: 768px) {
+      .footer { padding: 22px 24px; }
     }
 
-    /* ========== BG DECORATIONS ========== */
-    .bg-orb {
-      position:fixed; border-radius:50%; pointer-events:none; z-index:0;
-      filter:blur(60px); opacity:.4;
-    }
-    .bg-orb-1 { width:300px; height:300px; top:20%; left:-80px; background:rgba(56,189,248,.08); animation:orbDrift 20s ease-in-out infinite; }
-    .bg-orb-2 { width:250px; height:250px; top:60%; right:-60px; background:rgba(14,165,233,.06); animation:orbDrift 15s ease-in-out infinite reverse; }
-    .bg-orb-3 { width:200px; height:200px; bottom:10%; left:30%; background:rgba(3,105,161,.05); animation:orbDrift 18s ease-in-out infinite 3s; }
+    /* Desktop navbar */
+    @media (min-width: 768px) {
+      .navbar {
+        display: flex !important;
+        position: sticky;
+        top: 0;
+        z-index: 500;
+        background: #fff;
+        border-bottom: 1px solid #D9D9D9;
+        box-shadow: 0 1px 8px rgba(0,0,0,.06);
+        padding: 14px 24px;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+      }
+      .navbar .left { display: flex; align-items: center; gap: 10px; }
+      .navbar .left img { width: 38px; height: 38px; object-fit: contain; }
+      .navbar .left h1 {
+        font-family: 'Barlow Condensed', sans-serif;
+        font-size: 18px;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: #0B0B0B;
+      }
+      .navbar ul {
+        display: flex;
+        list-style: none;
+        gap: 20px;
+        align-items: center;
+      }
+      .navbar ul a {
+        font-family: 'Barlow Condensed', sans-serif;
+        font-size: 13px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        text-decoration: none;
+        color: #737373;
+        transition: color 0.2s;
+      }
+      .navbar ul a:hover,
+      .navbar ul a.active { color: #E63946; }
+      .locale-switch {
+        display: flex !important;
+        gap: 4px;
+      }
+      .locale-switch a {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 32px;
+        height: 28px;
+        padding: 0 8px;
+        border-radius: 4px;
+        border: 1px solid #D9D9D9;
+        background: #fff;
+        font-family: 'Inter', system-ui, sans-serif;
+        font-size: 11px;
+        font-weight: 700;
+        text-decoration: none;
+        color: #0B0B0B;
+        transition: 0.2s;
+      }
+      .locale-switch a.active {
+        background: #0B0B0B;
+        color: #fff;
+        border-color: #0B0B0B;
+      }
+      .nav-toggle { display: none !important; }
 
-    @keyframes orbDrift {
-      0%,100%{ transform:translate(0,0) scale(1); }
-      33%{ transform:translate(30px,-40px) scale(1.1); }
-      66%{ transform:translate(-20px,30px) scale(.95); }
+      /* Tab bar: below desktop navbar, not sticky-top-0 */
+      .catalog-tabs { top: 57px; }
     }
 
-    /* ========== RESPONSIVE ========== */
-    @media(max-width:768px){
-      .navbar { padding:0 20px; }
-      .navbar .left h1 { font-size:15px; }
-      .navbar ul { gap:15px; }
-      .navbar a { font-size:13px; }
-      .page-hero { padding:40px 20px; }
-      .page-hero h1 { font-size:24px; }
-      .page-hero p { font-size:14px; }
-      .filter-section { padding:0 16px; }
-      .filter-card { padding:20px; }
-      .filter-row { flex-direction:column; gap:16px; }
-      .products-section { padding:0 16px; }
-      .product-grid { grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:16px; }
-      .product-card .image-wrapper { height:180px; }
-      .results-bar { padding:0 16px; flex-direction:column; gap:8px; align-items:flex-start; }
-      .cta-section { padding:0 16px; }
-      .cta-card { padding:32px 24px; gap:24px; }
-      .cta-icon { width:72px; height:72px; font-size:40px; }
-      .cta-content h2 { font-size:20px; }
-      .float-wa { bottom:20px; right:20px; width:52px; height:52px; font-size:24px; }
+    /* Results bar */
+    .results-bar {
+      background: #F4F4F4;
+      padding: 10px 16px;
+      border-bottom: 1px solid #D9D9D9;
     }
-    @media(max-width:480px){
-      .product-grid { grid-template-columns:1fr; }
-      .page-hero h1 { font-size:22px; }
-      .cta-buttons { flex-direction:column; }
+    .results-bar p {
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 13px;
+      color: #737373;
+      max-width: 1280px;
+      margin: 0 auto;
+    }
+    @media (min-width: 768px) {
+      .results-bar { padding: 10px 24px; }
+    }
+
+    /* Body padding for bottom navbar */
+    @media (max-width: 768px) {
+      body { padding-bottom: 76px; }
     }
   </style>
 </head>
+<body class="has-bottom-nav">
 
-<body>
+  {{-- MINIMAL MOBILE HEADER (hidden on desktop) --}}
+  <header class="mobile-brand-header">
+    <a href="/">
+      <img src="{{ asset('img/faizalmotor_logo.png') }}" alt="{{ __('site.brand') }}">
+      <strong>{{ __('site.brand') }}</strong>
+    </a>
+  </header>
 
-<!-- LOADING SCREEN -->
-<div class="loading-screen" id="loadingScreen">
-  <div class="loader-bulb">
-    <div class="bulb"></div>
-    <div class="base"></div>
-    <div class="ray"></div>
-    <div class="ray"></div>
-    <div class="ray"></div>
-    <div class="ray"></div>
-    <div class="ray"></div>
+  {{-- DESKTOP NAVBAR (hidden on mobile via CSS) --}}
+  <div class="navbar">
+    <div class="left">
+      <img src="{{ asset('img/faizalmotor_logo.png') }}" alt="{{ __('site.brand') }}">
+      <h1>{{ __('site.brand') }}</h1>
+    </div>
+    <ul data-nav-menu>
+      <li><a href="/">{{ __('site.nav.home') }}</a></li>
+      <li><a href="/kategori" class="{{ $tab === 'lampu' ? 'active' : '' }}">{{ __('site.nav.category') }}</a></li>
+      <li><a href="/kategori?tab=sirine" class="{{ $tab === 'sirine' ? 'active' : '' }}">{{ __('site.nav.sirine') }}</a></li>
+      <li><a href="/lokasi">Lokasi</a></li>
+      <li><a href="/kontak">{{ __('site.nav.contact') }}</a></li>
+      <li class="locale-switch">
+        <a href="{{ route('locale.switch', 'id') }}" class="{{ app()->getLocale() === 'id' ? 'active' : '' }}">ID</a>
+        <a href="{{ route('locale.switch', 'en') }}" class="{{ app()->getLocale() === 'en' ? 'active' : '' }}">EN</a>
+      </li>
+    </ul>
   </div>
-  <div class="loading-text">Memuat Produk <span>...</span></div>
-  <div class="loading-bar"><div class="fill"></div></div>
-</div>
 
-<!-- BG DECORATIONS -->
-<div class="bg-orb bg-orb-1"></div>
-<div class="bg-orb bg-orb-2"></div>
-<div class="bg-orb bg-orb-3"></div>
-
-<!-- NAVBAR -->
-<div class="navbar" id="navbar">
-  <div class="left">
-    <img src="{{ asset('img/faizalmotor_logo.png') }}" alt="Logo">
-    <h1>Faizal Motor 139</h1>
-  </div>
-  <ul>
-    <li><a href="/">Beranda</a></li>
-    <li><a href="/kategori" class="active">Kategori</a></li>
-    <li><a href="#">Kontak</a></li>
-  </ul>
-</div>
-
-<!-- HERO BANNER -->
-<section class="page-hero" id="pageHero">
-  <div class="breadcrumb">
-    <a href="/">Beranda</a>
-    <span>›</span>
-    <span class="current">Kategori</span>
-  </div>
-  <h1>Temukan <span>Custom Lampu</span> Impianmu</h1>
-  <p>Jelajahi koleksi lengkap custom lampu motor premium dari Faizal Motor 139</p>
-</section>
-
-<!-- FILTER -->
-<section class="filter-section">
-  <div class="filter-card">
-    <div class="filter-header">
-      <h3>
-        <span class="icon">⚡</span>
-        Filter Produk
-      </h3>
-      @if(request('brand') || request('model') || request('sort'))
-        <a href="/kategori" class="filter-reset">✕ Reset Filter</a>
+  {{-- TAB SWITCHER --}}
+  <div class="catalog-tabs" role="tablist" aria-label="Jenis Produk">
+    <a href="/kategori?tab=lampu"
+       class="catalog-tab {{ $tab === 'lampu' ? 'is-active' : '' }}"
+       role="tab" aria-selected="{{ $tab === 'lampu' ? 'true' : 'false' }}"
+       id="tab-lampu">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+      </svg>
+      Lampu Motor
+      @if($tab === 'lampu' && $products instanceof \Illuminate\Pagination\LengthAwarePaginator)
+        <span class="catalog-tab__count">{{ $products->total() }}</span>
       @endif
+    </a>
+    <a href="/kategori?tab=sirine"
+       class="catalog-tab {{ $tab === 'sirine' ? 'is-active' : '' }}"
+       role="tab" aria-selected="{{ $tab === 'sirine' ? 'true' : 'false' }}"
+       id="tab-sirine">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+        <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+      </svg>
+      Sirine & Klakson
+      @if($tab === 'sirine' && $sirines instanceof \Illuminate\Pagination\LengthAwarePaginator)
+        <span class="catalog-tab__count">{{ $sirines->total() }}</span>
+      @endif
+    </a>
+  </div>
+
+  {{-- PAGE HEADER --}}
+  <div class="page-header">
+    <h1>
+      @if($tab === 'sirine')
+        {{ __('site.sirine.heading') }}
+      @else
+        {{ __('site.category.heading') }}
+      @endif
+    </h1>
+  </div>
+
+  {{-- ============================================================
+       TAB: LAMPU MOTOR
+  ============================================================ --}}
+  @if($tab === 'lampu')
+
+    {{-- Filter section --}}
+    <div class="filter-section">
+      <div class="filter-inline">
+        {{-- Brand filter --}}
+        <div class="filter-group">
+          <label>{{ __('site.category.brand') }}</label>
+          <div class="chip-row">
+            <a class="chip {{ !request('brand') ? 'active' : '' }}" href="/kategori?tab=lampu">Semua</a>
+            @foreach($brands as $brand)
+              <a class="chip {{ request('brand') === $brand->name ? 'active' : '' }}"
+                 href="{{ url('/kategori') }}?tab=lampu&brand={{ urlencode($brand->name) }}">{{ $brand->name }}</a>
+            @endforeach
+          </div>
+        </div>
+
+        @if(request('brand') && count($modelFamilies) > 0)
+        <div class="filter-group">
+          <label>{{ __('site.category.variant') }}</label>
+          <div class="chip-row">
+            <a class="chip {{ !$selectedFamily ? 'active' : '' }}" onclick="applyFamily('')">Semua</a>
+            @foreach($modelFamilies as $family)
+              <a class="chip {{ $selectedFamily === $family['family'] ? 'active' : '' }}"
+                 onclick="applyFamily('{{ addslashes($family['family']) }}')">{{ $family['family'] }}</a>
+            @endforeach
+          </div>
+        </div>
+        @endif
+
+        @if($models->isNotEmpty())
+        <div class="filter-group">
+          <label>{{ __('site.category.generation') }}</label>
+          <div class="chip-row">
+            <a class="chip {{ !request('model') ? 'active' : '' }}" onclick="applyGeneration('')">Semua</a>
+            @foreach($models as $model)
+              <a class="chip {{ request('model') === $model->name ? 'active' : '' }}"
+                 onclick="applyGeneration('{{ addslashes($model->name) }}')">
+                {{ $model->generation_name ?? $model->name }}
+              </a>
+            @endforeach
+          </div>
+        </div>
+        @endif
+
+        <div class="filter-group">
+          <label>{{ __('site.category.sort_price') }}</label>
+          <select class="selectbox" onchange="applySort(this.value)">
+            <option value="">{{ __('site.category.best') }}</option>
+            <option value="asc" {{ request('sort') === 'asc' ? 'selected' : '' }}>{{ __('site.category.cheapest') }}</option>
+            <option value="desc" {{ request('sort') === 'desc' ? 'selected' : '' }}>{{ __('site.category.expensive') }}</option>
+          </select>
+        </div>
+
+        @if(request('brand') || request('family') || request('model') || request('sort'))
+          <a class="btn-reset" href="/kategori?tab=lampu">{{ __('site.category.reset') }}</a>
+        @endif
+      </div>
     </div>
 
-    <form method="GET" action="/kategori">
-      <div class="filter-row">
-        <!-- BRAND -->
-        <div class="filter-col">
-          <div class="filter-group">
-            <span class="filter-label">🏍️ Brand Motor</span>
-            <div class="filter-chips">
-              @foreach($brands as $b)
-                <a href="?brand={{ $b->name }}{{ request('model') ? '&model='.request('model') : '' }}{{ request('sort') ? '&sort='.request('sort') : '' }}"
-                   class="chip {{ request('brand') == $b->name ? 'active' : '' }}">
-                  {{ $b->name }}
-                </a>
-              @endforeach
-            </div>
-          </div>
-        </div>
-
-        <!-- MODEL -->
-        <div class="filter-col">
-          <div class="filter-group">
-            <span class="filter-label">🔧 Model Motor</span>
-            <div class="filter-chips">
-              @foreach($models as $m)
-                <a href="?model={{ $m->name }}{{ request('brand') ? '&brand='.request('brand') : '' }}{{ request('sort') ? '&sort='.request('sort') : '' }}"
-                   class="chip {{ request('model') == $m->name ? 'active' : '' }}">
-                  {{ $m->name }}
-                </a>
-              @endforeach
-            </div>
-          </div>
-        </div>
-
-        <!-- SORT -->
-        <div class="filter-col" style="flex:0 0 auto;">
-          <div class="filter-group">
-            <span class="filter-label">💰 Urutkan Harga</span>
-            <select name="sort" class="sort-select" onchange="
-              let params = new URLSearchParams(window.location.search);
-              params.set('sort', this.value);
-              if (!this.value) params.delete('sort');
-              window.location.href = '/kategori?' + params.toString();
-            ">
-              <option value="">Semua Harga</option>
-              <option value="asc" {{ request('sort') == 'asc' ? 'selected' : '' }}>⬆ Termurah</option>
-              <option value="desc" {{ request('sort') == 'desc' ? 'selected' : '' }}>⬇ Termahal</option>
-            </select>
-          </div>
-        </div>
+    {{-- Results --}}
+    @if($products instanceof \Illuminate\Pagination\LengthAwarePaginator && $products->total() > 0)
+      <div class="results-bar">
+        <p>Menampilkan {{ $products->count() }} dari {{ $products->total() }} produk lampu motor</p>
       </div>
-    </form>
-  </div>
-</section>
-
-<!-- RESULTS BAR -->
-<div class="results-bar">
-  <p class="results-count">
-    Menampilkan <strong>{{ $products->count() }}</strong> produk
-    @if(request('brand'))
-      untuk brand <strong>{{ request('brand') }}</strong>
     @endif
-    @if(request('model'))
-      model <strong>{{ request('model') }}</strong>
+
+    {{-- Product grid --}}
+    <section class="products-section">
+      @if(!$products instanceof \Illuminate\Pagination\LengthAwarePaginator || $products->isEmpty())
+        <div class="empty-state">
+          <h3>{{ __('site.category.empty_title') }}</h3>
+          <p>{{ __('site.category.empty_text') }}</p>
+          <div class="empty-actions">
+            <a href="/kategori?tab=lampu">{{ __('site.category.all_products') }}</a>
+          </div>
+        </div>
+      @else
+        <div class="product-grid">
+          @foreach($products as $product)
+            <article class="product-card">
+              <a class="card-link" href="/product/{{ $product->id }}-{{ Str::slug($product->name) }}">
+                <div class="image-wrapper">
+                  <img src="{{ $product->image ? Storage::url($product->image) : asset('placeholder.png') }}" alt="{{ $product->name }}" loading="lazy" decoding="async">
+                </div>
+                <div class="card-body">
+                  <span class="tag">{{ $product->model->brand->name ?? '-' }}</span>
+                  <h3>{{ $product->name }}</h3>
+                  <p class="price">Rp {{ number_format($product->price, 0, ',', '.') }}</p>
+                </div>
+              </a>
+            </article>
+          @endforeach
+        </div>
+
+        @if($products->hasPages())
+          <div class="pagination-wrap">{{ $products->onEachSide(1)->links() }}</div>
+        @endif
+      @endif
+    </section>
+
+  @endif
+
+  {{-- ============================================================
+       TAB: SIRINE & KLAKSON
+  ============================================================ --}}
+  @if($tab === 'sirine')
+
+    @if($sirines instanceof \Illuminate\Pagination\LengthAwarePaginator && $sirines->total() > 0)
+      <div class="results-bar">
+        <p>Menampilkan {{ $sirines->count() }} dari {{ $sirines->total() }} produk sirine & klakson</p>
+      </div>
     @endif
-  </p>
-</div>
 
-<!-- PRODUK -->
-<section class="products-section">
-  <div class="product-grid">
-
-    @forelse($products as $p)
-    <div class="product-card">
-      <a href="/product/{{ $p->id }}-{{ Str::slug($p->name) }}" style="text-decoration:none; color:inherit;">
-        <div class="image-wrapper">
-          <img src="{{ asset('storage/' . $p->image) }}" alt="{{ $p->name }}">
-          <div class="badge-overlay">⚡ Custom</div>
-        </div>
-        <div class="card-body">
-          <div class="motor-tag">
-            🏍️ {{ $p->model->brand->name ?? '-' }} — {{ $p->model->name ?? '-' }}
-          </div>
-          <h3>{{ $p->name }}</h3>
-          <p class="description">{{ $p->description }}</p>
-          <div class="card-footer">
-            <div class="price">Rp {{ number_format($p->price, 0, ',', '.') }}</div>
-            <span class="btn-detail">Lihat →</span>
+    <section class="products-section">
+      @if(!$sirines instanceof \Illuminate\Pagination\LengthAwarePaginator || $sirines->isEmpty())
+        <div class="empty-state">
+          <h3>{{ __('site.sirine.empty_title') }}</h3>
+          <p>{{ __('site.sirine.empty_text') }}</p>
+          <div class="empty-actions">
+            <a href="/kontak">{{ __('site.sirine.contact_us') }}</a>
+            <a href="https://wa.me/6281223466068?text={{ rawurlencode('Halo Faizal Motor 139, saya mau tanya produk sirine.') }}" target="_blank" style="background:#25D366;">Chat WA</a>
           </div>
         </div>
-      </a>
-      <div style="padding:0 20px 20px;">
-        <a href="https://wa.me/6281223466068?text={{ rawurlencode(
-            "Halo kak, saya mau pesan {$p->name}\n" .
-            "Motor: " . ($p->model->name ?? '-') . "\n" .
-            "Harga: Rp " . number_format($p->price, 0, ',', '.') . "\n\n" .
-            "Apakah masih tersedia?"
-        ) }}"
-           target="_blank" class="btn-wa">
-          💬 Pesan via WhatsApp
-        </a>
-      </div>
-    </div>
-    @empty
-    <div class="empty-state">
-      <div class="empty-icon">🔍</div>
-      <h3>Produk Tidak Ditemukan</h3>
-      <p>Motor atau produk yang kamu cari belum tersedia di katalog kami.<br>Tapi jangan khawatir, hubungi admin untuk cek ketersediaan!</p>
-      <div class="empty-actions">
-        <a href="/kategori" class="btn-all">🔄 Lihat Semua Produk</a>
-        <a href="https://wa.me/6281223466068?text={{ rawurlencode("Halo kak, saya ingin tanya apakah ada custom lampu untuk motor " . (request('model') ?? request('brand') ?? 'saya') . "? Terima kasih.") }}"
-           target="_blank" class="btn-ask">
-          💬 Tanya Admin via WhatsApp
-        </a>
-      </div>
-    </div>
-    @endforelse
+      @else
+        <div class="product-grid">
+          @foreach($sirines as $sirine)
+            <article class="product-card">
+              <a class="main-link" href="/sirine/{{ $sirine->id }}-{{ Str::slug($sirine->name) }}">
+                <div class="image-wrapper">
+                  <img src="{{ $sirine->image ? Storage::url($sirine->image) : asset('placeholder.png') }}" alt="{{ $sirine->name }}" loading="lazy" decoding="async">
+                </div>
+                <div class="card-body">
+                  <span class="motor-tag">Sirine</span>
+                  <h3>{{ $sirine->name }}</h3>
+                  <p class="description">{{ $sirine->description }}</p>
+                  <div class="card-footer">
+                    <span class="price">Rp {{ number_format($sirine->price, 0, ',', '.') }}</span>
+                    <span class="btn-detail">Detail →</span>
+                  </div>
+                </div>
+              </a>
+              <a class="btn-wa"
+                 href="https://wa.me/6281223466068?text={{ rawurlencode('Halo admin, saya tertarik dengan '.$sirine->name.' (Rp '.number_format($sirine->price, 0, ',', '.').')') }}"
+                 target="_blank">
+                <svg width="15" height="15" viewBox="0 0 448 512" fill="currentColor">
+                  <path d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L3 480l117.7-30.9c32.4 17.7 68.9 27 106.2 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zm-157 341.6c-33.2 0-65.7-8.9-94-25.7l-6.7-4-69.8 18.3L72 359.2l-4.4-7c-18.5-29.4-28.2-63.3-28.2-98.2 0-101.7 82.8-184.5 184.6-184.5 49.3 0 95.6 19.2 130.4 54.1 34.8 34.9 56.2 81.2 56.1 130.5 0 101.8-84.9 184.6-186.6 184.6zm101.2-138.2c-5.5-2.8-32.8-16.2-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-32.6-16.3-54-29.1-75.5-66-5.7-9.8 5.7-9.1 16.3-30.3 1.8-3.7.9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 35.2 15.2 49 16.5 66.6 13.9 10.7-1.6 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z"/>
+                </svg>
+                Order WhatsApp
+              </a>
+              @php
+                $stores = collect([
+                  ['label' => 'Shopee', 'url' => $sirine->shopee_url, 'class' => 'store-shopee', 'icon' => asset('img/shopee.png')],
+                  ['label' => 'TikTok', 'url' => $sirine->tiktokshop_url, 'class' => 'store-tiktok', 'icon' => asset('img/tiktok.png')],
+                  ['label' => 'Tokopedia', 'url' => $sirine->tokopedia_url, 'class' => 'store-tokopedia', 'icon' => asset('img/tokopedia.png')],
+                ])->filter(fn ($s) => filled($s['url']));
+              @endphp
+              @if($stores->isNotEmpty())
+                <div class="store-links">
+                  @foreach($stores as $store)
+                    <a class="btn-store-card {{ $store['class'] }}" href="{{ $store['url'] }}" target="_blank" rel="noopener noreferrer">
+                      <span class="shopee-icon"><img src="{{ $store['icon'] }}" alt="{{ $store['label'] }}"></span>
+                      <span>{{ $store['label'] }}</span>
+                    </a>
+                  @endforeach
+                </div>
+              @endif
+            </article>
+          @endforeach
+        </div>
 
-  </div>
-</section>
+        @if($sirines->hasPages())
+          <div class="pagination-wrap">{{ $sirines->onEachSide(1)->links() }}</div>
+        @endif
+      @endif
+    </section>
 
-<!-- CTA - Tidak menemukan motor? -->
-<section class="cta-section">
-  <div class="cta-card">
-    <div class="cta-icon">💡</div>
-    <div class="cta-content">
-      <h2>Tidak menemukan motor kamu?</h2>
-      <p>
-        Jangan khawatir! Kami bisa custom lampu untuk <strong>semua jenis motor</strong>.
-        Hubungi admin kami langsung untuk konsultasi gratis dan tanyakan ketersediaan produk untuk motor kamu.
-      </p>
-      <div class="cta-buttons">
-        <a href="https://wa.me/6281223466068?text={{ rawurlencode("Halo kak, saya mau tanya apakah bisa custom lampu untuk motor saya? Terima kasih.") }}"
-           target="_blank" class="cta-btn-wa">
-          💬 Chat Admin 1
-        </a>
-        <a href="https://wa.me/6281220660964?text={{ rawurlencode("Halo kak, saya mau tanya apakah bisa custom lampu untuk motor saya? Terima kasih.") }}"
-           target="_blank" class="cta-btn-wa2">
-          📱 Chat Admin 2
-        </a>
-      </div>
-    </div>
-  </div>
-</section>
+  @endif
 
-<!-- FOOTER -->
-<footer class="footer">
-  <p>© 2026 <span>Faizal Motor 139</span> — Custom Lampu Motor Premium</p>
-</footer>
+  <footer class="footer">
+    <p>&copy; 2026 {{ __('site.brand') }}</p>
+  </footer>
 
-<!-- FLOATING WA BUTTON -->
-<a href="https://wa.me/6281223466068?text={{ rawurlencode("Halo kak, saya mau tanya tentang custom lampu motor.") }}"
-   target="_blank" class="float-wa">
-  💬
-  <div class="tooltip">Chat Admin Sekarang!</div>
-</a>
+  @include('components.bottom-navbar')
 
-<!-- SCRIPT -->
-<script>
-  // Loading screen
-  window.addEventListener('load', () => {
-    setTimeout(() => {
-      document.getElementById('loadingScreen').classList.add('hide');
-    }, 1200);
-  });
-
-  // Hero particles
-  const hero = document.getElementById('pageHero');
-  for(let i = 0; i < 8; i++){
-    const p = document.createElement('div');
-    p.className = 'particle';
-    const size = Math.random() * 4 + 2;
-    p.style.width = size + 'px';
-    p.style.height = size + 'px';
-    p.style.left = Math.random() * 100 + '%';
-    p.style.bottom = '0';
-    p.style.animationDuration = (Math.random() * 4 + 4) + 's';
-    p.style.animationDelay = (Math.random() * 5) + 's';
-    hero.appendChild(p);
-  }
-
-  // Navbar auto-hide
-  let prevScroll = window.pageYOffset;
-  const navbar = document.getElementById('navbar');
-  window.addEventListener('scroll', () => {
-    const cur = window.pageYOffset;
-    navbar.style.top = (prevScroll > cur) ? '0' : (cur > 100 ? '-80px' : '0');
-    prevScroll = cur;
-  });
-
-  // Scroll-reveal for product cards
-  const cards = document.querySelectorAll('.product-card');
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach((entry, i) => {
-      if(entry.isIntersecting){
-        setTimeout(() => entry.target.classList.add('visible'), i * 80);
-        observer.unobserve(entry.target);
-      }
-    });
-  }, { threshold: 0.1 });
-  cards.forEach(c => observer.observe(c));
-</script>
-
+  <script src="/script.js"></script>
+  <script>
+    function currentParams() {
+      const p = new URLSearchParams(window.location.search);
+      // Preserve tab param
+      if (!p.has('tab')) p.set('tab', 'lampu');
+      return p;
+    }
+    function applyFamily(value) {
+      const params = currentParams();
+      value ? params.set('family', value) : params.delete('family');
+      params.delete('model');
+      window.location.href = '/kategori?' + params.toString();
+    }
+    function applyGeneration(value) {
+      const params = currentParams();
+      value ? params.set('model', value) : params.delete('model');
+      window.location.href = '/kategori?' + params.toString();
+    }
+    function applySort(value) {
+      const params = currentParams();
+      value ? params.set('sort', value) : params.delete('sort');
+      window.location.href = '/kategori?' + params.toString();
+    }
+  </script>
 </body>
 </html>

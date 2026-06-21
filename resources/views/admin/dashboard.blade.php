@@ -53,7 +53,7 @@
       <tbody>
         @forelse($recentProducts as $p)
         <tr>
-          <td><img src="{{ asset('storage/' . $p->image) }}" class="thumb" alt=""></td>
+          <td><img src="{{ $p->image ? Storage::url($p->image) : asset('placeholder.png') }}" class="thumb" alt=""></td>
           <td><strong>{{ $p->name }}</strong></td>
           <td>
             <span class="badge badge-ice">{{ $p->model->brand->name ?? '-' }}</span>

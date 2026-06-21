@@ -1,59 +1,34 @@
 <?php
 
-use App\Models\Product;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\LocaleController;
+use App\Http\Controllers\StorefrontController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\BrandController;
 use App\Http\Controllers\Admin\MotorModelController;
 use App\Http\Controllers\Admin\ProductController;
-use Illuminate\Http\Request;
-use App\Models\Brand;
-use App\Models\MotorModel;
+use App\Http\Controllers\Admin\SirineController;
+use App\Http\Controllers\ContactController;
 
-Route::get('/', function () {
-    $products = Product::latest()->take(6)->get();
-    return view('welcome', compact('products'));
-});
+Route::get('/locale/{locale}', LocaleController::class)->name('locale.switch');
 
-Route::get('/product/{id}-{slug}', function ($id, $slug) {
-    $product = Product::findOrFail($id);
+Route::middleware(\App\Http\Middleware\SetLocale::class)->group(function () {
+    Route::get('/', [StorefrontController::class, 'home']);
 
-    $related = Product::where('motor_model_id', $product->motor_model_id)
-        ->where('id', '!=', $product->id)
-        ->take(3)
-        ->get();
+    Route::get('/product/{id}-{slug}', [StorefrontController::class, 'productDetail']);
 
-    return view('detail', compact('product', 'related'));
-});
+    Route::get('/kategori', [StorefrontController::class, 'category']);
 
-Route::get('/kategori', function (Request $request) {
-    $brands = Brand::all();
-    $models = MotorModel::all();
-    
-    $products = Product::query();
-    
-    if ($request->filled('brand')) {
-        $products->whereHas('model.brand', function ($q) use ($request) {
-            $q->where('name', $request->brand);
-        });
-    }
-    
-    if ($request->filled('model')) {
-        $products->whereHas('model', function ($q) use ($request) {
-            $q->where('name', $request->model);
-        });
-    }
-    
-    if ($request->filled('sort')) {
-        $direction = $request->sort === 'asc' ? 'asc' : 'desc';
-        $products->orderBy('price', $direction);
-    }
-    
-    $products = $products->get();
-    
-    return view('kategori', compact('brands', 'models', 'products'));
+    Route::get('/sirine', fn () => redirect('/kategori?tab=sirine', 301));
+
+    Route::get('/sirine/{id}-{slug}', [StorefrontController::class, 'sirineDetail']);
+
+    Route::get('/lokasi', [StorefrontController::class, 'lokasi'])->name('lokasi');
+
+    // KONTAK
+    Route::get('/kontak', [ContactController::class, 'create'])->name('kontak.create');
+    Route::post('/kontak', [ContactController::class, 'store'])->name('kontak.store');
 });
 
 // ADMIN
@@ -84,12 +59,24 @@ Route::middleware(['auth'])->prefix('admin')->group(function () {
     Route::get('/products/{product}/edit', [ProductController::class, 'edit'])->name('admin.products.edit');
     Route::put('/products/{product}', [ProductController::class, 'update'])->name('admin.products.update');
     Route::delete('/products/{product}', [ProductController::class, 'destroy'])->name('admin.products.destroy');
+
+    // Sirines
+    Route::get('/sirines', [SirineController::class, 'index'])->name('admin.sirines.index');
+    Route::get('/sirines/create', [SirineController::class, 'create'])->name('admin.sirines.create');
+    Route::post('/sirines', [SirineController::class, 'store'])->name('admin.sirines.store');
+    Route::get('/sirines/{sirine}/edit', [SirineController::class, 'edit'])->name('admin.sirines.edit');
+    Route::put('/sirines/{sirine}', [SirineController::class, 'update'])->name('admin.sirines.update');
+    Route::delete('/sirines/{sirine}', [SirineController::class, 'destroy'])->name('admin.sirines.destroy');
+
+    // Contacts
+    Route::get('/contacts', [\App\Http\Controllers\Admin\ContactController::class, 'index'])->name('admin.contacts.index');
+    Route::delete('/contacts/{contact}', [\App\Http\Controllers\Admin\ContactController::class, 'destroy'])->name('admin.contacts.destroy');
 });
 
 // DASHBOARD (redirect to admin dashboard)
-Route::get('/dashboard', function () {
-    return redirect('/admin/dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+Route::redirect('/dashboard', '/admin/dashboard')
+    ->middleware(['auth', 'verified'])
+    ->name('dashboard');
 
 // PROFILE
 Route::middleware('auth')->group(function () {

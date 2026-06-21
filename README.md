@@ -57,3 +57,24 @@ If you discover a security vulnerability within Laravel, please send an e-mail t
 ## License
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+
+## Shared Hosting Notes
+
+Untuk deploy ke shared hosting seperti paket `Unlimited M`, gunakan konfigurasi production berikut:
+
+- Pastikan `.env` production memakai `APP_ENV=production`, `APP_DEBUG=false`, `FILESYSTEM_DISK=public`, `SESSION_DRIVER=file`, `CACHE_STORE=file`, dan `QUEUE_CONNECTION=sync`.
+- Jalankan `php artisan storage:link` setelah upload project.
+- Setelah update kode, jalankan:
+
+```bash
+php artisan migrate --force
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+```
+
+- Jika ada data cache lama saat testing lokal, bersihkan dengan:
+
+```bash
+php artisan optimize:clear
+```
